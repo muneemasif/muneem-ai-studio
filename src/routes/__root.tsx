@@ -77,19 +77,22 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "Solo AI — Project Builder by Muneem Asif" },
+      { name: "description", content: "Solo AI: a minimal, sleek AI assistant that builds live React + Tailwind web projects and chats about anything. Crafted by Muneem Asif." },
+      { name: "author", content: "Muneem Asif" },
+      { property: "og:title", content: "Solo AI — Project Builder" },
+      { property: "og:description", content: "Build live web projects and chat with a general-purpose AI, in one clean workspace." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
       {
         rel: "stylesheet",
         href: appCss,
+      },
+      {
+        rel: "stylesheet",
+        href: "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css",
       },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
     ],
