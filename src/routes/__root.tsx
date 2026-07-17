@@ -78,10 +78,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Muneem AI — Minimal AI Assistant by Muneem Asif" },
-      { name: "description", content: "Muneem AI: a minimal, sleek black-and-white AI assistant. Ask anything — math, code, ideas. Crafted by Muneem Asif." },
+      { title: "Aura AI — Minimal AI Assistant by Muneem Asif" },
+      { name: "description", content: "Aura AI: a minimal, sleek black-and-white AI assistant. Ask anything — math, code, ideas. Crafted by Muneem Asif." },
       { name: "author", content: "Muneem Asif" },
-      { property: "og:title", content: "Muneem AI" },
+      { property: "og:title", content: "Aura AI" },
       { property: "og:description", content: "A minimal, sleek AI assistant by Muneem Asif." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

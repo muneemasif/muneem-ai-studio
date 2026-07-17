@@ -59,23 +59,24 @@ function Index() {
         { id, role: "assistant", content: reply, createdAt: Date.now(), streaming: true, reveal: 0 },
       ]);
       // Typewriter reveal — fast, chunked
+      // Typewriter reveal — very fast; finishes in ~500ms regardless of length
       const total = reply.length;
-      const step = Math.max(3, Math.ceil(total / 120));
+      const targetMs = 500;
+      const frameMs = 16;
+      const step = Math.max(6, Math.ceil(total / (targetMs / frameMs)));
       let i = 0;
       const tick = () => {
         i = Math.min(total, i + step);
         setMessages((prev) =>
           prev.map((m) => (m.id === id ? { ...m, reveal: i } : m)),
         );
-        if (i < total) {
-          setTimeout(tick, 12);
-        } else {
+        if (i < total) requestAnimationFrame(tick);
+        else
           setMessages((prev) =>
             prev.map((m) => (m.id === id ? { ...m, streaming: false, reveal: total } : m)),
           );
-        }
       };
-      setTimeout(tick, 20);
+      requestAnimationFrame(tick);
     } catch (err) {
       setMessages((prev) => [
         ...prev,
