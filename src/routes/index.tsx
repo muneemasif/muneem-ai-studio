@@ -112,10 +112,10 @@ function Index() {
       <header className="relative z-10 flex items-center justify-between border-b border-border/60 px-4 py-3 backdrop-blur-sm sm:px-6 sm:py-4">
         <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
           <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white overflow-hidden glow-ring">
-            <img src={logoAsset.url} alt="Muneem AI" className="h-full w-full object-contain invert" />
+            <img src={logoAsset.url} alt="Aura AI" className="h-full w-full object-contain invert" />
           </div>
           <div className="min-w-0">
-            <div className="truncate text-sm font-semibold tracking-tight">Muneem AI</div>
+            <div className="truncate text-sm font-semibold tracking-tight">Aura AI</div>
             <div className="truncate text-[11px] text-muted-foreground">by Muneem Asif · UCP Lahore</div>
           </div>
         </div>
@@ -169,7 +169,7 @@ function Index() {
                 </button>
               </div>
               <div className="mt-2 flex flex-wrap items-center justify-between gap-1 px-1 text-[10px] text-muted-foreground sm:text-[11px]">
-                <span>Muneem AI · minimal & fast</span>
+                <span>Aura AI · minimal & fast</span>
                 <span className="opacity-70 hidden sm:inline">Enter to send · Shift+Enter for newline</span>
               </div>
             </div>
@@ -192,10 +192,10 @@ function Empty({
   return (
     <div className="mx-auto flex h-full max-w-2xl flex-col items-center justify-center px-5 text-center sm:px-6">
       <div className="fade-up mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-white overflow-hidden glow-ring sm:mb-6">
-        <img src={logoAsset.url} alt="Muneem AI" className="h-full w-full object-contain invert" />
+        <img src={logoAsset.url} alt="Aura AI" className="h-full w-full object-contain invert" />
       </div>
       <h1 className="fade-up text-2xl font-semibold tracking-tight sm:text-3xl" style={{ animationDelay: "60ms" }}>
-        Ask Muneem AI anything.
+        Ask Aura AI anything.
       </h1>
       <p className="fade-up mt-2 max-w-md text-sm text-muted-foreground" style={{ animationDelay: "120ms" }}>
         A minimal, thoughtful AI. Math renders in LaTeX, code in clean blocks.
@@ -286,15 +286,15 @@ function AboutModal({ onClose }: { onClose: () => void }) {
       >
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl bg-white glow-ring">
-            <img src={logoAsset.url} alt="Muneem AI" className="h-full w-full object-contain invert" />
+            <img src={logoAsset.url} alt="Aura AI" className="h-full w-full object-contain invert" />
           </div>
           <div>
-            <div className="text-base font-semibold">Muneem AI</div>
+            <div className="text-base font-semibold">Aura AI</div>
             <div className="text-xs text-muted-foreground">A quiet, capable assistant.</div>
           </div>
         </div>
         <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-          Muneem AI is crafted by <span className="text-foreground font-medium">Muneem Asif</span>,
+          Aura AI is crafted by <span className="text-foreground font-medium">Muneem Asif</span>,
           a BSCS student at <span className="text-foreground font-medium">UCP Lahore</span>
           {" "}(University of Central Punjab). A warm, general-purpose chat companion with
           proper LaTeX math and clean code blocks — designed to feel calm, minimal, and fast.
