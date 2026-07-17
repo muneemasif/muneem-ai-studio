@@ -34,27 +34,56 @@ export const chatWithSolo = createServerFn({ method: "POST" })
       contents,
     };
 
-    const res = await fetch(
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-goog-api-key": apiKey,
-        },
-        body: JSON.stringify(body),
-      },
-    );
+    // Try multiple models with retries — Gemini often returns 503 (overloaded).
+    const models = [
+      "gemini-flash-latest",
+      "gemini-2.5-flash",
+      "gemini-2.0-flash",
+      "gemini-flash-lite-latest",
+    ];
 
-    if (!res.ok) {
-      const text = await res.text();
-      throw new Error(`Gemini error ${res.status}: ${text.slice(0, 300)}`);
+    let lastErr = "";
+    let lastStatus = 0;
+    for (const model of models) {
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const res = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-goog-api-key": apiKey,
+            },
+            body: JSON.stringify(body),
+          },
+        );
+
+        if (res.ok) {
+          const json = (await res.json()) as {
+            candidates?: { content?: { parts?: { text?: string }[] } }[];
+          };
+          const text =
+            json.candidates?.[0]?.content?.parts
+              ?.map((p) => p.text ?? "")
+              .join("") ?? "";
+          return { text };
+        }
+
+        lastStatus = res.status;
+        lastErr = (await res.text()).slice(0, 300);
+
+        // Only retry/fallback on transient errors
+        if (res.status !== 503 && res.status !== 429 && res.status !== 500) {
+          throw new Error(`Gemini error ${res.status}: ${lastErr}`);
+        }
+        await new Promise((r) => setTimeout(r, 400 * (attempt + 1)));
+      }
     }
 
-    const json = (await res.json()) as {
-      candidates?: { content?: { parts?: { text?: string }[] } }[];
+    return {
+      text: "⚠️ Solo AI is temporarily overloaded (Google's servers are experiencing high demand). Please try again in a few seconds.",
+      overloaded: true,
+      status: lastStatus,
+      detail: lastErr,
     };
-    const text =
-      json.candidates?.[0]?.content?.parts?.map((p) => p.text ?? "").join("") ?? "";
-    return { text };
   });
