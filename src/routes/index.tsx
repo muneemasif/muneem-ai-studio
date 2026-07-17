@@ -1,10 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import { chatWithSolo } from "@/lib/gemini.functions";
+import logoAsset from "@/assets/muneem-ai-logo.png.asset.json";
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -15,30 +16,16 @@ type Message = {
   role: "user" | "assistant";
   content: string;
   createdAt: number;
+  streaming?: boolean;
+  reveal?: number;
 };
 
-type Mode = "builder" | "general";
-
 const uid = () => Math.random().toString(36).slice(2, 10);
-
-function extractHtml(text: string): string | null {
-  const m = text.match(/```html\s*([\s\S]*?)```/i);
-  if (m) return m[1].trim();
-  const m2 = text.match(/<!doctype[\s\S]*<\/html>/i) || text.match(/<html[\s\S]*<\/html>/i);
-  return m2 ? m2[0] : null;
-}
-
-function stripHtmlBlock(text: string): string {
-  return text.replace(/```html\s*[\s\S]*?```/i, "").trim();
-}
 
 function Index() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
-  const [mode, setMode] = useState<Mode>("general");
   const [loading, setLoading] = useState(false);
-  const [preview, setPreview] = useState<string | null>(null);
-  const [previewOpen, setPreviewOpen] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -62,20 +49,33 @@ function Index() {
     try {
       const res = await chatWithSolo({
         data: {
-          mode,
           messages: next.map((m) => ({ role: m.role, content: m.content })),
         },
       });
       const reply = res.text || "…";
-      const html = mode === "builder" ? extractHtml(reply) : null;
-      if (html) {
-        setPreview(html);
-        setPreviewOpen(true);
-      }
+      const id = uid();
       setMessages((prev) => [
         ...prev,
-        { id: uid(), role: "assistant", content: reply, createdAt: Date.now() },
+        { id, role: "assistant", content: reply, createdAt: Date.now(), streaming: true, reveal: 0 },
       ]);
+      // Typewriter reveal — fast, chunked
+      const total = reply.length;
+      const step = Math.max(3, Math.ceil(total / 120));
+      let i = 0;
+      const tick = () => {
+        i = Math.min(total, i + step);
+        setMessages((prev) =>
+          prev.map((m) => (m.id === id ? { ...m, reveal: i } : m)),
+        );
+        if (i < total) {
+          setTimeout(tick, 12);
+        } else {
+          setMessages((prev) =>
+            prev.map((m) => (m.id === id ? { ...m, streaming: false, reveal: total } : m)),
+          );
+        }
+      };
+      setTimeout(tick, 20);
     } catch (err) {
       setMessages((prev) => [
         ...prev,
@@ -100,61 +100,28 @@ function Index() {
     }
   };
 
-  const suggestions = useMemo(
-    () =>
-      mode === "builder"
-        ? [
-            "A cozy coffee shop landing page with menu grid",
-            "A pricing page with 3 tiered plans and a toggle",
-            "A weather widget UI with animated icons",
-          ]
-        : [
-            "Explain Fourier transforms with an example",
-            "Solve step by step: integral of x·e^x dx",
-            "What's a clean way to structure a React app?",
-          ],
-    [mode],
-  );
+  const suggestions = [
+    "Explain Fourier transforms with an example",
+    "Solve step by step: integral of x·e^x dx",
+    "What's a clean way to structure a React app?",
+  ];
 
   return (
     <div className="grain relative flex h-screen w-full flex-col overflow-hidden bg-background text-foreground">
-      <header className="relative z-10 flex items-center justify-between border-b border-border/60 px-6 py-4 backdrop-blur-sm">
-        <div className="flex items-center gap-3">
-          <div className="relative flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 glow-ring">
-            <div className="h-2.5 w-2.5 rounded-full bg-primary animate-pulse" />
+      <header className="relative z-10 flex items-center justify-between border-b border-border/60 px-4 py-3 backdrop-blur-sm sm:px-6 sm:py-4">
+        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+          <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white overflow-hidden glow-ring">
+            <img src={logoAsset.url} alt="Muneem AI" className="h-full w-full object-contain invert" />
           </div>
-          <div>
-            <div className="text-sm font-semibold tracking-tight">Solo AI</div>
-            <div className="text-[11px] text-muted-foreground">Project Builder · by Muneem Asif</div>
+          <div className="min-w-0">
+            <div className="truncate text-sm font-semibold tracking-tight">Muneem AI</div>
+            <div className="truncate text-[11px] text-muted-foreground">by Muneem Asif · UCP Lahore</div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="flex rounded-lg border border-border bg-card p-1">
-            {(["general", "builder"] as Mode[]).map((m) => (
-              <button
-                key={m}
-                onClick={() => setMode(m)}
-                className={`relative rounded-md px-3 py-1.5 text-xs font-medium transition-all duration-200 ${
-                  mode === m
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {m === "general" ? "Chat" : "Build"}
-              </button>
-            ))}
-          </div>
-          {preview && (
-            <button
-              onClick={() => setPreviewOpen((v) => !v)}
-              className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:text-foreground"
-            >
-              {previewOpen ? "Hide preview" : "Show preview"}
-            </button>
-          )}
+        <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={() => setShowAbout(true)}
-            className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:text-foreground"
+            className="rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition hover:text-foreground sm:px-3"
           >
             About
           </button>
@@ -162,16 +129,12 @@ function Index() {
       </header>
 
       <div className="relative z-10 flex flex-1 overflow-hidden">
-        <section
-          className={`flex flex-col transition-all duration-500 ease-out ${
-            previewOpen && preview ? "w-1/2 border-r border-border/60" : "w-full"
-          }`}
-        >
+        <section className="flex w-full flex-col">
           <div ref={scrollRef} className="scrollbar-thin flex-1 overflow-y-auto">
             {messages.length === 0 ? (
-              <Empty mode={mode} suggestions={suggestions} onPick={(s) => setInput(s)} />
+              <Empty suggestions={suggestions} onPick={(s) => setInput(s)} />
             ) : (
-              <div className="mx-auto flex max-w-3xl flex-col gap-6 px-6 py-8">
+              <div className="mx-auto flex max-w-3xl flex-col gap-5 px-3 py-5 sm:gap-6 sm:px-6 sm:py-8">
                 {messages.map((m) => (
                   <MessageBubble key={m.id} m={m} />
                 ))}
@@ -180,7 +143,7 @@ function Index() {
             )}
           </div>
 
-          <div className="border-t border-border/60 bg-background/70 px-4 py-4 backdrop-blur">
+          <div className="border-t border-border/60 bg-background/70 px-3 py-3 backdrop-blur sm:px-4 sm:py-4">
             <div className="mx-auto max-w-3xl">
               <div className="group flex items-end gap-2 rounded-2xl border border-border bg-card px-3 py-2 transition-all focus-within:border-primary/60 focus-within:glow-ring">
                 <textarea
@@ -188,11 +151,7 @@ function Index() {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={onKey}
-                  placeholder={
-                    mode === "builder"
-                      ? "Describe the web project you want to build…"
-                      : "Ask anything — math, code, ideas…"
-                  }
+                  placeholder="Ask anything — math, code, ideas…"
                   rows={1}
                   className="max-h-40 flex-1 resize-none bg-transparent px-2 py-2 text-sm text-foreground placeholder:text-muted-foreground/70 focus:outline-none"
                   style={{ minHeight: 40 }}
@@ -208,55 +167,13 @@ function Index() {
                   </svg>
                 </button>
               </div>
-              <div className="mt-2 flex items-center justify-between px-1 text-[11px] text-muted-foreground">
-                <span>
-                  {mode === "builder" ? "Build mode · React + Tailwind + JS" : "Chat mode · General purpose"}
-                </span>
-                <span className="opacity-70">Enter to send · Shift+Enter for newline</span>
+              <div className="mt-2 flex flex-wrap items-center justify-between gap-1 px-1 text-[10px] text-muted-foreground sm:text-[11px]">
+                <span>Muneem AI · minimal & fast</span>
+                <span className="opacity-70 hidden sm:inline">Enter to send · Shift+Enter for newline</span>
               </div>
             </div>
           </div>
         </section>
-
-        {previewOpen && preview && (
-          <section className="flex w-1/2 flex-col bg-[oklch(0.11_0.01_250)] fade-up">
-            <div className="flex items-center justify-between border-b border-border/60 px-4 py-3">
-              <div className="flex items-center gap-2">
-                <div className="flex gap-1.5">
-                  <span className="h-3 w-3 rounded-full bg-destructive/70" />
-                  <span className="h-3 w-3 rounded-full bg-primary/70" />
-                  <span className="h-3 w-3 rounded-full bg-accent-foreground/40" />
-                </div>
-                <div className="ml-2 text-xs text-muted-foreground">Live Preview</div>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => {
-                    const blob = new Blob([preview], { type: "text/html" });
-                    const url = URL.createObjectURL(blob);
-                    window.open(url, "_blank");
-                  }}
-                  className="rounded-md border border-border px-2.5 py-1 text-[11px] text-muted-foreground transition hover:text-foreground"
-                >
-                  Open ↗
-                </button>
-                <button
-                  onClick={() => setPreviewOpen(false)}
-                  className="rounded-md border border-border px-2.5 py-1 text-[11px] text-muted-foreground transition hover:text-foreground"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-            <iframe
-              key={preview.slice(0, 40) + preview.length}
-              title="preview"
-              sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
-              srcDoc={preview}
-              className="h-full w-full flex-1 bg-white"
-            />
-          </section>
-        )}
       </div>
 
       {showAbout && <AboutModal onClose={() => setShowAbout(false)} />}
@@ -265,28 +182,24 @@ function Index() {
 }
 
 function Empty({
-  mode,
   suggestions,
   onPick,
 }: {
-  mode: Mode;
   suggestions: string[];
   onPick: (s: string) => void;
 }) {
   return (
-    <div className="mx-auto flex h-full max-w-2xl flex-col items-center justify-center px-6 text-center">
-      <div className="fade-up mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 glow-ring">
-        <div className="h-3 w-3 rounded-full bg-primary" />
+    <div className="mx-auto flex h-full max-w-2xl flex-col items-center justify-center px-5 text-center sm:px-6">
+      <div className="fade-up mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-white overflow-hidden glow-ring sm:mb-6">
+        <img src={logoAsset.url} alt="Muneem AI" className="h-full w-full object-contain invert" />
       </div>
-      <h1 className="fade-up text-3xl font-semibold tracking-tight" style={{ animationDelay: "60ms" }}>
-        {mode === "builder" ? "What should we build today?" : "Ask Solo anything."}
+      <h1 className="fade-up text-2xl font-semibold tracking-tight sm:text-3xl" style={{ animationDelay: "60ms" }}>
+        Ask Muneem AI anything.
       </h1>
       <p className="fade-up mt-2 max-w-md text-sm text-muted-foreground" style={{ animationDelay: "120ms" }}>
-        {mode === "builder"
-          ? "Describe a UI, page or component. I'll craft it with React + Tailwind and render it live."
-          : "A minimal, thoughtful AI. Math renders in LaTeX, code in clean blocks."}
+        A minimal, thoughtful AI. Math renders in LaTeX, code in clean blocks.
       </p>
-      <div className="fade-up mt-8 grid w-full gap-2 sm:grid-cols-3" style={{ animationDelay: "180ms" }}>
+      <div className="fade-up mt-6 grid w-full gap-2 sm:mt-8 sm:grid-cols-3" style={{ animationDelay: "180ms" }}>
         {suggestions.map((s) => (
           <button
             key={s}
@@ -303,20 +216,22 @@ function Empty({
 
 function MessageBubble({ m }: { m: Message }) {
   const isUser = m.role === "user";
-  const display = m.role === "assistant" ? stripHtmlBlock(m.content) || m.content : m.content;
-  const hasBuild = m.role === "assistant" && /```html/i.test(m.content);
+  const display =
+    m.role === "assistant" && m.reveal !== undefined
+      ? m.content.slice(0, m.reveal)
+      : m.content;
   return (
     <div className={`fade-up flex ${isUser ? "justify-end" : "justify-start"}`}>
-      <div className={`flex max-w-[85%] gap-3 ${isUser ? "flex-row-reverse" : ""}`}>
+      <div className={`flex max-w-[92%] gap-2 sm:max-w-[85%] sm:gap-3 ${isUser ? "flex-row-reverse" : ""}`}>
         <div
-          className={`mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold ${
-            isUser ? "bg-accent text-accent-foreground" : "bg-primary/15 text-primary"
+          className={`mt-1 flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full text-[10px] font-semibold ${
+            isUser ? "bg-accent text-accent-foreground" : "bg-white"
           }`}
         >
-          {isUser ? "You" : "S"}
+          {isUser ? "You" : <img src={logoAsset.url} alt="M" className="h-full w-full object-contain invert" />}
         </div>
         <div
-          className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
+          className={`rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed sm:px-4 ${
             isUser
               ? "bg-primary text-primary-foreground"
               : "bg-card text-card-foreground border border-border/60"
@@ -332,11 +247,8 @@ function MessageBubble({ m }: { m: Message }) {
               >
                 {display}
               </ReactMarkdown>
-              {hasBuild && (
-                <div className="mt-2 inline-flex items-center gap-2 rounded-md border border-primary/30 bg-primary/10 px-2 py-1 text-[11px] text-primary">
-                  <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-                  Rendered in preview
-                </div>
+              {m.streaming && (
+                <span className="ml-0.5 inline-block h-3.5 w-[2px] translate-y-0.5 bg-foreground animate-pulse" />
               )}
             </div>
           )}
@@ -349,8 +261,8 @@ function MessageBubble({ m }: { m: Message }) {
 function Typing() {
   return (
     <div className="fade-up flex items-center gap-3">
-      <div className="mt-1 flex h-7 w-7 items-center justify-center rounded-full bg-primary/15 text-[10px] font-semibold text-primary">
-        S
+      <div className="mt-1 flex h-7 w-7 items-center justify-center overflow-hidden rounded-full bg-white">
+        <img src={logoAsset.url} alt="M" className="h-full w-full object-contain invert" />
       </div>
       <div className="flex items-center gap-1 rounded-2xl border border-border/60 bg-card px-4 py-3">
         <span className="typing-dot h-1.5 w-1.5 rounded-full bg-muted-foreground" />
@@ -364,29 +276,27 @@ function Typing() {
 function AboutModal({ onClose }: { onClose: () => void }) {
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm fade-up"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm fade-up p-4"
       onClick={onClose}
     >
       <div
-        className="mx-4 w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl"
+        className="w-full max-w-md rounded-2xl border border-border bg-card p-5 shadow-2xl sm:p-6"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 glow-ring">
-            <div className="h-2.5 w-2.5 rounded-full bg-primary" />
+          <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl bg-white glow-ring">
+            <img src={logoAsset.url} alt="Muneem AI" className="h-full w-full object-contain invert" />
           </div>
           <div>
-            <div className="text-base font-semibold">Solo AI</div>
+            <div className="text-base font-semibold">Muneem AI</div>
             <div className="text-xs text-muted-foreground">A quiet, capable assistant.</div>
           </div>
         </div>
         <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-          Solo AI is crafted by <span className="text-foreground font-medium">Muneem Asif</span>,
+          Muneem AI is crafted by <span className="text-foreground font-medium">Muneem Asif</span>,
           a BSCS student at <span className="text-foreground font-medium">UCP Lahore</span>
-          {" "}(University of Central Punjab). It has two sides: a{" "}
-          <em className="text-foreground not-italic">Project Builder</em> that scaffolds live
-          React + Tailwind pages, and a warm, general-purpose chat companion with proper LaTeX
-          math and clean code blocks.
+          {" "}(University of Central Punjab). A warm, general-purpose chat companion with
+          proper LaTeX math and clean code blocks — designed to feel calm, minimal, and fast.
         </p>
         <button
           onClick={onClose}
