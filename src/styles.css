@@ -63,25 +63,25 @@
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.129 0.042 264.695);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.129 0.042 264.695);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.129 0.042 264.695);
-  --primary: oklch(0.208 0.042 265.755);
-  --primary-foreground: oklch(0.984 0.003 247.858);
-  --secondary: oklch(0.968 0.007 247.896);
-  --secondary-foreground: oklch(0.208 0.042 265.755);
-  --muted: oklch(0.968 0.007 247.896);
-  --muted-foreground: oklch(0.554 0.046 257.417);
-  --accent: oklch(0.968 0.007 247.896);
-  --accent-foreground: oklch(0.208 0.042 265.755);
+  --background: oklch(0.14 0.012 250);
+  --foreground: oklch(0.96 0.005 250);
+  --card: oklch(0.18 0.014 250);
+  --card-foreground: oklch(0.96 0.005 250);
+  --popover: oklch(0.18 0.014 250);
+  --popover-foreground: oklch(0.96 0.005 250);
+  --primary: oklch(0.78 0.14 75);
+  --primary-foreground: oklch(0.16 0.02 60);
+  --secondary: oklch(0.24 0.014 250);
+  --secondary-foreground: oklch(0.96 0.005 250);
+  --muted: oklch(0.22 0.012 250);
+  --muted-foreground: oklch(0.68 0.02 250);
+  --accent: oklch(0.28 0.02 250);
+  --accent-foreground: oklch(0.96 0.005 250);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(0.929 0.013 255.508);
-  --input: oklch(0.929 0.013 255.508);
-  --ring: oklch(0.704 0.04 256.788);
+  --border: oklch(0.28 0.014 250);
+  --input: oklch(0.24 0.014 250);
+  --ring: oklch(0.78 0.14 75);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -140,5 +140,100 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
+    font-family: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
   }
 }
+
+@layer utilities {
+  .grain::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image: radial-gradient(oklch(1 0 0 / 0.02) 1px, transparent 1px);
+    background-size: 3px 3px;
+    z-index: 0;
+  }
+
+  .glow-ring {
+    box-shadow:
+      0 0 0 1px oklch(0.78 0.14 75 / 0.25),
+      0 10px 40px -10px oklch(0.78 0.14 75 / 0.35);
+  }
+
+  .fade-up {
+    animation: fade-up 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+
+  .typing-dot {
+    animation: typing 1.2s infinite ease-in-out;
+  }
+  .typing-dot:nth-child(2) { animation-delay: 0.15s; }
+  .typing-dot:nth-child(3) { animation-delay: 0.3s; }
+
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      transparent,
+      oklch(0.78 0.14 75 / 0.15),
+      transparent
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite linear;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar { width: 6px; height: 6px; }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: oklch(0.3 0.014 250);
+    border-radius: 999px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes typing {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-4px); opacity: 1; }
+}
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Markdown polish */
+.prose-solo p { margin: 0.5rem 0; line-height: 1.65; }
+.prose-solo h1, .prose-solo h2, .prose-solo h3 { font-weight: 600; margin: 1rem 0 0.5rem; letter-spacing: -0.01em; }
+.prose-solo h1 { font-size: 1.35rem; }
+.prose-solo h2 { font-size: 1.15rem; }
+.prose-solo h3 { font-size: 1rem; }
+.prose-solo ul, .prose-solo ol { padding-left: 1.25rem; margin: 0.5rem 0; }
+.prose-solo li { margin: 0.2rem 0; }
+.prose-solo code:not(pre code) {
+  background: oklch(0.24 0.014 250);
+  padding: 0.12rem 0.35rem;
+  border-radius: 0.35rem;
+  font-size: 0.85em;
+  color: oklch(0.88 0.06 75);
+}
+.prose-solo pre {
+  background: oklch(0.11 0.01 250);
+  border: 1px solid var(--color-border);
+  padding: 0.9rem 1rem;
+  border-radius: 0.6rem;
+  overflow-x: auto;
+  font-size: 0.85rem;
+  line-height: 1.55;
+  margin: 0.75rem 0;
+}
+.prose-solo a { color: oklch(0.82 0.14 75); text-decoration: underline; text-underline-offset: 3px; }
+.prose-solo blockquote {
+  border-left: 2px solid var(--color-primary);
+  padding-left: 0.85rem;
+  color: var(--color-muted-foreground);
+  margin: 0.75rem 0;
+}
+.prose-solo .katex-display { margin: 0.75rem 0; overflow-x: auto; overflow-y: hidden; }
