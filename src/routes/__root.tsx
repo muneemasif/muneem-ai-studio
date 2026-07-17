@@ -11,6 +11,7 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import logoAsset from "../assets/muneem-ai-logo.png.asset.json";
 
 function NotFoundComponent() {
   return (
@@ -77,11 +78,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Solo AI — Project Builder by Muneem Asif" },
-      { name: "description", content: "Solo AI: a minimal, sleek AI assistant that builds live React + Tailwind web projects and chats about anything. Crafted by Muneem Asif." },
+      { title: "Muneem AI — Minimal AI Assistant by Muneem Asif" },
+      { name: "description", content: "Muneem AI: a minimal, sleek black-and-white AI assistant. Ask anything — math, code, ideas. Crafted by Muneem Asif." },
       { name: "author", content: "Muneem Asif" },
-      { property: "og:title", content: "Solo AI — Project Builder" },
-      { property: "og:description", content: "Build live web projects and chat with a general-purpose AI, in one clean workspace." },
+      { property: "og:title", content: "Muneem AI" },
+      { property: "og:description", content: "A minimal, sleek AI assistant by Muneem Asif." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -100,7 +101,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap",
       },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "icon", type: "image/png", href: logoAsset.url },
+      { rel: "apple-touch-icon", href: logoAsset.url },
     ],
   }),
   shellComponent: RootShell,
