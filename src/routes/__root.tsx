@@ -81,10 +81,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "Aura AI — Minimal AI Assistant by Muneem Asif" },
       { name: "description", content: "Aura AI: a minimal, sleek black-and-white AI assistant. Ask anything — math, code, ideas. Crafted by Muneem Asif." },
       { name: "author", content: "Muneem Asif" },
-      { property: "og:title", content: "Aura AI" },
-      { property: "og:description", content: "A minimal, sleek AI assistant by Muneem Asif." },
+      { property: "og:title", content: "Aura AI — Minimal AI Assistant by Muneem Asif" },
+      { property: "og:description", content: "Aura AI: a minimal, sleek black-and-white AI assistant. Ask anything — math, code, ideas. Crafted by Muneem Asif." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Aura AI — Minimal AI Assistant by Muneem Asif" },
+      { name: "twitter:description", content: "Aura AI: a minimal, sleek black-and-white AI assistant. Ask anything — math, code, ideas. Crafted by Muneem Asif." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/004881d1-5f96-4a28-96c9-731dd6bdc361/id-preview-c26adf8a--b00c05b7-dc3c-4d34-b03d-b574b68957a3.lovable.app-1784376819198.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/004881d1-5f96-4a28-96c9-731dd6bdc361/id-preview-c26adf8a--b00c05b7-dc3c-4d34-b03d-b574b68957a3.lovable.app-1784376819198.png" },
     ],
     links: [
       {
