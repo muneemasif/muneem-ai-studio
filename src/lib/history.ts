@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useSyncExternalStore } from "react";
+import { useCallback, useSyncExternalStore } from "react";
 
 export type Attachment = {
   mimeType: string;
@@ -118,9 +118,6 @@ export function ensureThreadExists(id: string) {
   ]);
 }
 
-/**
- * Convenience: hook returning helpers plus threads.
- */
 export function useHistory() {
   const threads = useThreads();
   const remove = useCallback((id: string) => deleteThread(id), []);
@@ -128,19 +125,3 @@ export function useHistory() {
   const rename = useCallback((id: string, title: string) => renameThread(id, title), []);
   return { threads, remove, create, rename };
 }
-
-/** Hydration helper: true after first client render. */
-export function useHydrated() {
-  const store = useSyncExternalStore(
-    (cb) => {
-      cb();
-      return () => {};
-    },
-    () => true,
-    () => false,
-  );
-  return store;
-}
-
-// keep react happy about unused imports
-void useEffect;
