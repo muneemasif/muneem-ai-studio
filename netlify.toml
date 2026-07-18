@@ -1,0 +1,11 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NITRO_PRESET = "netlify"
+  NODE_VERSION = "20"
+
+# TanStack Start builds SSR handlers into Netlify Functions via the Nitro
+# `netlify` preset. Client assets are emitted to `dist/`. No _redirects file
+# is needed — the preset wires the catch-all handler automatically.

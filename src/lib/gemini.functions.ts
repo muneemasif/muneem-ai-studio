@@ -8,7 +8,8 @@ Reply naturally in Markdown. Use proper LaTeX for math: inline $...$ and display
 
 Tone: Human, concise, professional but warm. Do not sound robotic or over-formal. Avoid excessive disclaimers. Never mention that you are made by Google or based on Gemini — you are Aura AI.`;
 
-type Msg = { role: "user" | "assistant"; content: string };
+type Attachment = { mimeType: string; data: string; name?: string };
+type Msg = { role: "user" | "assistant"; content: string; attachments?: Attachment[] };
 
 export const chatWithSolo = createServerFn({ method: "POST" })
   .inputValidator((data: { messages: Msg[] }) => data)
@@ -16,10 +17,17 @@ export const chatWithSolo = createServerFn({ method: "POST" })
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) throw new Error("Missing GEMINI_API_KEY");
 
-    const contents = data.messages.map((m) => ({
-      role: m.role === "assistant" ? "model" : "user",
-      parts: [{ text: m.content }],
-    }));
+    const contents = data.messages.map((m) => {
+      const parts: Array<Record<string, unknown>> = [];
+      if (m.content) parts.push({ text: m.content });
+      if (m.attachments && m.role === "user") {
+        for (const a of m.attachments) {
+          parts.push({ inlineData: { mimeType: a.mimeType, data: a.data } });
+        }
+      }
+      if (parts.length === 0) parts.push({ text: "" });
+      return { role: m.role === "assistant" ? "model" : "user", parts };
+    });
 
     const body = {
       system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
@@ -91,4 +99,65 @@ export const chatWithSolo = createServerFn({ method: "POST" })
       status: lastStatus,
       detail: lastErr,
     };
+  });
+
+export const generateImage = createServerFn({ method: "POST" })
+  .inputValidator((data: { prompt: string }) => data)
+  .handler(async ({ data }) => {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) throw new Error("Missing GEMINI_API_KEY");
+
+    const models = [
+      "gemini-2.5-flash-image",
+      "gemini-2.5-flash-image-preview",
+      "gemini-2.0-flash-preview-image-generation",
+    ];
+
+    let lastErr = "";
+    for (const model of models) {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 45000);
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-goog-api-key": apiKey,
+          },
+          body: JSON.stringify({
+            contents: [{ role: "user", parts: [{ text: data.prompt }] }],
+            generationConfig: { responseModalities: ["IMAGE", "TEXT"] },
+          }),
+          signal: controller.signal,
+        },
+      ).catch((e) => {
+        lastErr = e instanceof Error ? e.message : String(e);
+        return null;
+      });
+      clearTimeout(timeout);
+      if (!res) continue;
+      if (!res.ok) {
+        lastErr = (await res.text()).slice(0, 400);
+        continue;
+      }
+      const json = (await res.json()) as {
+        candidates?: {
+          content?: {
+            parts?: { text?: string; inlineData?: { mimeType: string; data: string } }[];
+          };
+        }[];
+      };
+      const parts = json.candidates?.[0]?.content?.parts ?? [];
+      const imgPart = parts.find((p) => p.inlineData?.data);
+      const textPart = parts.find((p) => p.text)?.text ?? "";
+      if (imgPart?.inlineData) {
+        return {
+          image: `data:${imgPart.inlineData.mimeType};base64,${imgPart.inlineData.data}`,
+          text: textPart,
+        };
+      }
+      lastErr = "No image returned";
+    }
+    throw new Error(`Image generation failed: ${lastErr}`);
   });
